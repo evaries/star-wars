@@ -14,14 +14,14 @@ export const fetchPlanet = async (planetId) => {
     const { data } = await axios.get(`${baseURL}planets/${planetId}`);
     return data;
   } catch (e) {
-    console.log(e);
+    throw e;
   }
 };
-export const fetchPeoples = async (url) => {
+export const fetchResident = async (url) => {
   try {
     const people = await axios.get(url);
     return people.data.name;
   } catch (e) {
-    console.log(e);
+    throw e;
   }
 };

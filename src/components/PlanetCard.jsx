@@ -23,6 +23,7 @@ const useStyles = makeStyles({
 
 const PlanetCard = ({ planet }) => {
   const classes = useStyles();
+
   let history = useHistory();
   const goToPlanetPage = () => {
     const url = planet.url;

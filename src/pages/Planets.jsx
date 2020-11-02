@@ -7,13 +7,17 @@ import { useHistory } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { makeStyles } from '@material-ui/core/styles';
 import { fetchPlanets } from '../api/index';
-import { PLANETS_PER_PAGE } from '../constants/planets';
+import { planetsPerPage } from '../constants/planets';
 import { useQuery } from '../hooks/hooks';
+import Error from '../components/Error';
+import { generalError, pageNotFoundError } from '../constants/errors';
 
 const Planets = () => {
   const [fetchedPlanets, setFetchedPlanets] = useState([]);
   const [currentPage, setCurrentPage] = useState(null);
   const [amountOfPages, setAmountOfPages] = useState(0);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const history = useHistory();
   const query = useQuery();
 
@@ -24,11 +28,24 @@ const Planets = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetchPlanets(currentPage);
-      const pages = response.count / PLANETS_PER_PAGE;
-      setAmountOfPages(pages);
-      const planets = response.results;
-      setFetchedPlanets(planets);
+      try {
+        setIsLoading(true);
+        const response = await fetchPlanets(currentPage);
+
+        const pages = Math.ceil(response.count / planetsPerPage);
+        setAmountOfPages(pages);
+
+        const planets = response.results;
+        setFetchedPlanets(planets);
+      } catch (e) {
+        const error =
+          e.response.status === 404 ? pageNotFoundError : generalError;
+
+        setErrorMessage(error);
+        setFetchedPlanets([]);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     if (currentPage) {
@@ -51,7 +68,9 @@ const Planets = () => {
   const classes = useStyles();
   return (
     <Grid container spacing={3} justify="space-between">
-      {fetchedPlanets.length ? (
+      {isLoading && <Loader />}
+      {errorMessage && <Error errorMessage={errorMessage} />}
+      {fetchedPlanets.length && (
         <>
           {fetchedPlanets.map((planet) => (
             <Grid item xs key={uuidv4()}>
@@ -67,8 +86,6 @@ const Planets = () => {
             />
           </Grid>
         </>
-      ) : (
-        <Loader />
       )}
     </Grid>
   );
